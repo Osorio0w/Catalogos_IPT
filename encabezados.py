@@ -17,7 +17,7 @@ CANVA_SANS_REGULAR = "fuentes/CanvaSans-Regular.ttf"
 
 PAGE_WIDTH, PAGE_HEIGHT = (595.27, 841.89)  # A4 en puntos
 FIRST_HEADER_HEIGHT = 7.3 * cm
-OTHER_HEADER_HEIGHT = 1.7 * cm
+OTHER_HEADER_HEIGHT = 2 * cm
 
 
 # -------------------------------
@@ -176,24 +176,75 @@ def draw_header_page1(c, category_text, header_color, logo_path):
 def draw_header_pageN(c, category_text, header_color, logo_path):
     """
     Encabezado de páginas siguientes:
-    - Franja del color del usuario.
-    - Bloque negro con el logo de IPT en la esquina superior izquierda.
+    - Franja del color del usuario (no ocupa toda la página, deja 4 cm antes del borde derecho).
+    - Bloque negro con el logo, pegado a la esquina superior izquierda y más ancho.
+    - Logo más grande dentro del bloque.
     - Texto centrado con el nombre de la categoría.
     """
     h = OTHER_HEADER_HEIGHT
 
-    # Fondo de color del encabezado
+    # -----------------------------
+    # Fondo del encabezado (más corto)
+    # -----------------------------
+    fondo_margin_right = 4 * cm  # margen derecho
+    fondo_w = PAGE_WIDTH - fondo_margin_right
+    fondo_x = 0
+    fondo_y = PAGE_HEIGHT - h
+
     c.setFillColor(header_color)
-    c.rect(0, PAGE_HEIGHT - h, PAGE_WIDTH, h, fill=1, stroke=0)
+    c.rect(fondo_x, fondo_y, fondo_w, h, fill=1, stroke=0)
 
-    # Bloque negro con el logo (igual estilo que el de la primera página)
-    block_height = h    # todo el alto del encabezado
-    block_y = PAGE_HEIGHT - h + (h - block_height) / 2  # centrado verticalmente
-    draw_logo_block(c, 0.1 * cm, block_y, block_height, logo_path)
+    # -----------------------------
+    # Bloque negro con el logo
+    # -----------------------------
+    block_h = h
+    block_w = block_h * 2.7  # ancho extendido
+    block_x = 0
+    block_y = PAGE_HEIGHT - block_h  # pegado arriba
 
-    # Texto centrado
+    # Dibuja la forma puntiaguda negra
+    pts = [
+        (block_x, block_y),
+        (block_x + block_w * 0.8, block_y),
+        (block_x + block_w, block_y + block_h / 2.0),
+        (block_x + block_w * 0.8, block_y + block_h),
+        (block_x, block_y + block_h),
+    ]
+    c.setFillColor(colors.black)
+    path = c.beginPath()
+    path.moveTo(pts[0][0], pts[0][1])
+    for px, py in pts[1:]:
+        path.lineTo(px, py)
+    path.close()
+    c.drawPath(path, fill=1, stroke=0)
+
+    # -----------------------------
+    # Logo dentro del bloque negro
+    # -----------------------------
+    margin = 0.05 * block_h
+    inner_x = block_x + margin + 0.2 * cm
+    inner_y = block_y + margin
+    inner_w = block_w * 0.75 - margin * 1.5 + (0.3 * cm)
+    inner_h = block_h - margin * 2
+
+    if logo_path and os.path.exists(logo_path):
+        try:
+            img = ImageReader(logo_path)
+            c.drawImage(img, inner_x, inner_y,
+                        width=inner_w, height=inner_h,
+                        preserveAspectRatio=True, mask='auto')
+        except:
+            pass
+    else:
+        c.setFillColor(colors.white)
+        c.setFont(get_font_name('bold'), 12)
+        c.drawCentredString(inner_x + inner_w / 2, inner_y + inner_h / 2 - 4, "INSUMOSPARA:TODO")
+
+    # -----------------------------
+    # Texto centrado (categoría)
+    # -----------------------------
     c.setFillColor(colors.white)
-    c.setFont(get_font_name('bold'), 28)
-    c.drawCentredString(PAGE_WIDTH / 2, PAGE_HEIGHT - h / 2 - 6, category_text.upper())
+    c.setFont(get_font_name('bold'), 45)
+    c.drawCentredString(PAGE_WIDTH / 2, PAGE_HEIGHT - h / 2 - 15 , category_text.upper())
 
     return h
