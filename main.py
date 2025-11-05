@@ -1,5 +1,7 @@
 # =====================================
-# main.py - Adaptado para GitHub Codespaces
+# main.py - versión corregida 1.4.0 
+# python3 main.py
+# source myenv/bin/activate
 # =====================================
 import pandas as pd
 from reportlab.lib.pagesizes import A4
@@ -22,7 +24,7 @@ from encabezados import (
 # CONFIG
 # -------------------------------
 EXCEL_FILE = "productos.xlsx"
-OUTPUT_FILE = "catalogo2.pdf"
+OUTPUT_FILE = "catalogo.pdf"
 PAGE_WIDTH, PAGE_HEIGHT = A4
 PAGE2_START_Y_OFFSET = 6.4 * cm
 
@@ -61,10 +63,12 @@ def dibujar_texto_con_saltos(c, x, y, texto, ancho_max, fuente, tamaño_fuente, 
 
 
 def draw_code_background(c, x, y, card_width, card_height):
+    """Fondo negro del código, perfectamente alineado dentro del cuadro del producto."""
     c.setFillColor(colors.black)
     code_width = 3.8 * cm
     code_height = 0.8 * cm
-    c.rect(x - 0.05 * cm, y + card_height - code_height + 0.05 * cm, code_width, code_height, fill=True, stroke=False)
+    # Alineado a la esquina superior izquierda del cuadro
+    c.rect(x, y + card_height - code_height, code_width, code_height, fill=True, stroke=False)
 
 
 def draw_triangle(c, x, y, size, color):
@@ -78,32 +82,54 @@ def draw_triangle(c, x, y, size, color):
 
 
 def draw_product_card(c, x, y, producto, triangle_color):
+    """Dibuja una tarjeta de producto correctamente alineada y en orden de capas."""
     card_width = 6.0 * cm
     card_height = 6.0 * cm
+
+    # 1️⃣ Marco del producto
     c.setStrokeColor(colors.black)
     c.rect(x, y, card_width, card_height)
 
+    # 2️⃣ Franja negra del código
     draw_code_background(c, x, y, card_width, card_height)
 
+    # 3️⃣ Texto del código (encima de la franja)
     c.setFillColor(colors.white)
     c.setFont(get_font_name('bold'), 13)
-    c.drawCentredString(x + 2.5 * cm, y + card_height - 0.5 * cm, producto.get("codigo", ""))
+    c.drawCentredString(x + 1.9 * cm, y + card_height - 0.5 * cm, producto.get("codigo", ""))
 
-    descripcion_x = x + card_width / 2
-    descripcion_y = y + card_height - 1.2 * cm
-    dibujar_texto_con_saltos(c, descripcion_x, descripcion_y,
-                             producto.get("descripcion", ""),
-                             card_width - 1.2 * cm,
-                             get_font_name('bold'), 9, max_lineas=3)
-
+    # 4️⃣ Imagen del producto
     try:
         img = ImageReader(producto.get("imagen", ""))
-        c.drawImage(img, x + 0.5 * cm, y + 1.4 * cm, width=5.0 * cm, height=2.5 * cm,
-                    preserveAspectRatio=True, mask='auto')
-    except:
+        c.drawImage(
+            img,
+            x + 0.5 * cm,
+            y + 1.7 * cm,
+            width=5.0 * cm,
+            height=2.6 * cm,
+            preserveAspectRatio=True,
+            mask='auto'
+        )
+    except Exception:
+        c.setFillColor(colors.black)
         c.setFont(get_font_name('regular'), 7)
-        c.drawCentredString(x + card_width / 2, y + 2.5 * cm, "[Imagen no encontrada]")
+        c.drawCentredString(x + card_width / 2, y + 2.8 * cm, "[Imagen no encontrada]")
 
+    # 5️⃣ Descripción (debajo de la imagen)
+    descripcion_x = x + card_width / 2
+    descripcion_y = y + 1.4 * cm
+    dibujar_texto_con_saltos(
+        c,
+        descripcion_x,
+        descripcion_y,
+        producto.get("descripcion", ""),
+        card_width - 1.2 * cm,
+        get_font_name('bold'),
+        9,
+        max_lineas=3
+    )
+
+    # 6️⃣ Triángulo decorativo
     draw_triangle(c, x + card_width, y, 1.4 * cm, triangle_color)
 
 
@@ -118,7 +144,7 @@ def generar_catalogo(category_text, header_color):
     triangle_color = header_color
 
     x_positions = [1.5 * cm, 8.0 * cm, 14.5 * cm]
-    row_step = 6.5 * cm
+    row_step = 6.7 * cm  # leve aumento para más espacio entre filas
     first_page_limit = 9
     other_pages_limit = 12
 
@@ -151,38 +177,37 @@ def generar_catalogo(category_text, header_color):
             y = PAGE_HEIGHT - header_height - PAGE2_START_Y_OFFSET
             col, products_on_page, page_limit = 0, 0, other_pages_limit
 
+    draw_footer(c, header_color)
     c.save()
     print(f"✅ Catálogo generado: {OUTPUT_FILE}")
 
 
 # -------------------------------
-# INTERFAZ DE USUARIO PARA MODO CONSOLA
+# INTERFAZ DE CONSOLA (Codespaces)
 # -------------------------------
 def modo_consola():
-    """Interfaz de consola para Codespaces"""
     print("=" * 60)
     print("GENERADOR DE CATÁLOGO - MODO CONSOLA")
     print("=" * 60)
-    
-    # Valores por defecto
+
     titulo = "BOLSAS"
     color_hex = "#63B7FF"
-    
+
     while True:
         print(f"\nConfiguración actual:")
         print(f"1. Título: {titulo}")
         print(f"2. Color HEX: {color_hex}")
         print("3. Generar catálogo")
         print("4. Salir")
-        
+
         opcion = input("\nSelecciona una opción (1-4): ").strip()
-        
+
         if opcion == "1":
             nuevo_titulo = input("Nuevo título (ENTER para mantener actual): ").strip()
             if nuevo_titulo:
                 titulo = nuevo_titulo
             print(f"✅ Título actualizado: {titulo}")
-            
+
         elif opcion == "2":
             nuevo_color = input("Nuevo color HEX (ej: #3AA8FF): ").strip()
             if nuevo_color:
@@ -193,40 +218,35 @@ def modo_consola():
                     nuevo_color = "#" + nuevo_color
                 color_hex = nuevo_color
             print(f"✅ Color actualizado: {color_hex}")
-            
+
         elif opcion == "3":
             try:
                 print(f"\n🚀 Generando catálogo...")
                 print(f"   - Título: {titulo}")
                 print(f"   - Color: {color_hex}")
-                
                 color_obj = colors.HexColor(color_hex)
                 generar_catalogo(titulo, color_obj)
-                
-                print(f"✅ ¡Catálogo generado exitosamente!")
-                print(f"📄 Archivo: {OUTPUT_FILE}")
+                print(f"✅ ¡Catálogo generado exitosamente! 📄 {OUTPUT_FILE}")
                 break
-                
             except FileNotFoundError:
                 print("❌ Error: No se encuentra el archivo productos.xlsx")
             except Exception as e:
                 print(f"❌ Error al generar el catálogo: {e}")
-                
+
         elif opcion == "4":
             print("👋 ¡Hasta luego!")
             break
-            
+
         else:
             print("❌ Opción no válida. Por favor selecciona 1-4.")
 
 
 # -------------------------------
-# INTERFAZ GRÁFICA ORIGINAL
+# INTERFAZ GRÁFICA LOCAL
 # -------------------------------
 def ui_grafica():
-    """Interfaz gráfica original (solo si no estamos en Codespaces)"""
     from tkinter import Tk, Label, Entry, Button, colorchooser, messagebox
-    
+
     root = Tk()
     root.title("Generador de Catálogo")
     root.geometry("420x300")
