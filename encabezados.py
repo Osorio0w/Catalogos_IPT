@@ -177,37 +177,45 @@ def draw_header_pageN(c, category_text, header_color, logo_path):
     """
     Encabezado de páginas siguientes:
     - Franja del color del usuario (no ocupa toda la página, deja 4 cm antes del borde derecho).
+    - Solo la esquina inferior derecha está redondeada.
     - Bloque negro con el logo, pegado a la esquina superior izquierda y más ancho.
+    - Punta más suave en el borde derecho.
     - Logo más grande dentro del bloque.
     - Texto centrado con el nombre de la categoría.
     """
     h = OTHER_HEADER_HEIGHT
 
     # -----------------------------
-    # Fondo del encabezado (más corto)
+    # Fondo del encabezado
     # -----------------------------
-    fondo_margin_right = 4 * cm  # margen derecho
+    fondo_margin_right = 4 * cm
     fondo_w = PAGE_WIDTH - fondo_margin_right
-    fondo_x = 0
+    fondo_x = 1.8 * cm
     fondo_y = PAGE_HEIGHT - h
+    radius = 20
 
     c.setFillColor(header_color)
-    c.rect(fondo_x, fondo_y, fondo_w, h, fill=1, stroke=0)
+    c.roundRect(fondo_x, fondo_y, fondo_w, h, radius, fill=1, stroke=0)
+
+    # Recuadrar las esquinas que no deben ser redondeadas
+    c.rect(fondo_x, PAGE_HEIGHT - radius, radius, radius, fill=1, stroke=0)
+    c.rect(fondo_x + fondo_w - radius, PAGE_HEIGHT - radius, radius, radius, fill=1, stroke=0)
+    c.rect(fondo_x, fondo_y, radius, radius, fill=1, stroke=0)
 
     # -----------------------------
     # Bloque negro con el logo
     # -----------------------------
     block_h = h
-    block_w = block_h * 2.7  # ancho extendido
+    block_w = block_h * 2.7
     block_x = 0
-    block_y = PAGE_HEIGHT - block_h  # pegado arriba
+    block_y = PAGE_HEIGHT - block_h
 
-    # Dibuja la forma puntiaguda negra
+    # 🔸 Punta menos aguda (0.9 → más corta)
     pts = [
         (block_x, block_y),
-        (block_x + block_w * 0.8, block_y),
-        (block_x + block_w, block_y + block_h / 2.0),
-        (block_x + block_w * 0.8, block_y + block_h),
+        (block_x + block_w * 0.85, block_y),
+        (block_x + block_w * 0.95, block_y + (block_h / 2.0) + 1),  # <-- punta menos aguda
+        (block_x + block_w * 0.85, block_y + block_h),
         (block_x, block_y + block_h),
     ]
     c.setFillColor(colors.black)
@@ -219,13 +227,13 @@ def draw_header_pageN(c, category_text, header_color, logo_path):
     c.drawPath(path, fill=1, stroke=0)
 
     # -----------------------------
-    # Logo dentro del bloque negro
+    # Logo dentro del bloque
     # -----------------------------
     margin = 0.05 * block_h
     inner_x = block_x + margin + 0.2 * cm
     inner_y = block_y + margin
-    inner_w = block_w * 0.75 - margin * 1.5 + (0.3 * cm)
-    inner_h = block_h - margin * 2
+    inner_w = block_w * 0.8  # ligeramente más grande
+    inner_h = block_h - margin * 1.5
 
     if logo_path and os.path.exists(logo_path):
         try:
@@ -245,6 +253,6 @@ def draw_header_pageN(c, category_text, header_color, logo_path):
     # -----------------------------
     c.setFillColor(colors.white)
     c.setFont(get_font_name('bold'), 45)
-    c.drawCentredString(PAGE_WIDTH / 2, PAGE_HEIGHT - h / 2 - 15 , category_text.upper())
+    c.drawCentredString(PAGE_WIDTH / 2, PAGE_HEIGHT - h / 2 - 15, category_text.upper())
 
     return h
