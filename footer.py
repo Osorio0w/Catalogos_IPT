@@ -11,13 +11,13 @@ from reportlab.pdfbase.ttfonts import TTFont
 # -------------------------------
 # CONFIG
 # -------------------------------
-INSTAGRAM_ICON = "icon_instagram.png"  # Ícono en la carpeta raíz del programa
+INSTAGRAM_ICON = "instagram.png"  # Ícono en la carpeta raíz del programa
 CANVA_SANS_BOLD = "fuentes/CanvaSans-Bold.ttf"
 CANVA_SANS_REGULAR = "fuentes/CanvaSans-Regular.ttf"
 
 # Tamaño del footer
-FOOTER_WIDTH = 13 * cm
-FOOTER_HEIGHT = 2 * cm
+FOOTER_WIDTH = 16 * cm   # más ancho
+FOOTER_HEIGHT = 1.3 * cm  # más bajo
 
 
 # -------------------------------
@@ -53,10 +53,11 @@ def get_font_name(style='regular'):
 # -------------------------------
 # FOOTER
 # -------------------------------
-def draw_footer(c, footer_color=colors.black):
+def draw_footer(c, header_color):
     """
     Dibuja un footer en la parte inferior de la página:
-    - Bloque de color personalizado (13x2 cm), pegado al borde inferior izquierdo.
+    - Bloque del mismo color que el encabezado.
+    - Solo la esquina superior derecha redondeada.
     - Ícono de Instagram centrado junto con el texto '@insumosparatodo'.
     """
     cargar_fuentes_footer()
@@ -64,31 +65,37 @@ def draw_footer(c, footer_color=colors.black):
     # Posición del footer (pegado a la esquina inferior izquierda)
     footer_x = 0 * cm
     footer_y = 0 * cm
+    radius = 15  # radio del redondeo
 
-    # Fondo del footer (color del encabezado)
-    c.setFillColor(footer_color)
-    c.rect(footer_x, footer_y, FOOTER_WIDTH, FOOTER_HEIGHT, fill=1, stroke=0)
+    # Fondo del footer (usa el color del encabezado)
+    c.setFillColor(header_color)
+    c.roundRect(footer_x, footer_y, FOOTER_WIDTH, FOOTER_HEIGHT, radius, fill=1, stroke=0)
+
+    # “Rectificar” las esquinas que no deben redondearse (todas menos la sup. derecha)
+    c.rect(footer_x, footer_y, radius, radius, fill=1, stroke=0)  # inf izq
+    c.rect(footer_x, footer_y + FOOTER_HEIGHT - radius, radius, radius, fill=1, stroke=0)  # sup izq
+    c.rect(footer_x + FOOTER_WIDTH - radius, footer_y, radius, radius, fill=1, stroke=0)  # inf der
 
     # Dimensiones del ícono
-    icon_size = 1.2 * cm
-    spacing = 0.5 * cm  # espacio entre el ícono y el texto
+    icon_size = 1.3 * cm
+    spacing = 0.4 * cm
 
     # Texto
-    c.setFont(get_font_name('bold'), 14)
+    c.setFont(get_font_name('CanvaSans'), 14)
     text = "@insumosparatodo"
-    text_width = pdfmetrics.stringWidth(text, get_font_name('bold'), 14)
+    text_width = pdfmetrics.stringWidth(text, get_font_name('bold'), 12)
 
     # Ancho total (icono + espacio + texto)
     total_width = icon_size + spacing + text_width
 
-    # Posicionar todo el conjunto centrado horizontalmente dentro del footer
+    # Posicionar conjunto centrado dentro del footer
     start_x = footer_x + (FOOTER_WIDTH - total_width) / 2
     icon_x = start_x
     text_x = icon_x + icon_size + spacing
 
-    # Centrar verticalmente el ícono y el texto
+    # Centrado vertical
     icon_y = footer_y + (FOOTER_HEIGHT - icon_size) / 2
-    text_y = footer_y + (FOOTER_HEIGHT / 2) - 0.35 * cm
+    text_y = footer_y + (FOOTER_HEIGHT / 2) - 0.25 * cm
 
     # Dibujar el ícono
     if os.path.exists(INSTAGRAM_ICON):
@@ -101,7 +108,7 @@ def draw_footer(c, footer_color=colors.black):
     else:
         c.setFillColor(colors.white)
         c.setFont(get_font_name('bold'), 10)
-        c.drawString(icon_x, icon_y + 0.3 * cm, "[IG]")
+        c.drawString(icon_x, icon_y + 0.2 * cm, "[IG]")
 
     # Dibujar el texto
     c.setFillColor(colors.white)

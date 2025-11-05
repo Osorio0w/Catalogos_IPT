@@ -142,7 +142,7 @@ def generar_catalogo(category_text, header_color):
             y -= row_step
 
         if products_on_page >= page_limit:
-            draw_footer(c)
+            draw_footer(c, header_color)
             c.showPage()
             header_height = draw_header_pageN(c, category_text, header_color, logo_path)
             y = PAGE_HEIGHT - header_height - PAGE2_START_Y_OFFSET
