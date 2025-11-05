@@ -10,6 +10,7 @@ from reportlab.lib.utils import ImageReader
 from tkinter import Tk, Label, Entry, Button, colorchooser, messagebox
 import os
 import re
+from footer import draw_footer
 from encabezados import (
     cargar_fuentes,
     get_font_name,
@@ -101,7 +102,7 @@ def draw_product_card(c, x, y, producto, triangle_color):
         c.setFont(get_font_name('regular'), 7)
         c.drawCentredString(x + card_width / 2, y + 2.5 * cm, "[Imagen no encontrada]")
 
-    draw_triangle(c, x + card_width, y, 1.1 * cm, triangle_color)
+    draw_triangle(c, x + card_width, y, 1.4 * cm, triangle_color)
 
 # -------------------------------
 # GENERACIÓN DEL CATÁLOGO
@@ -141,6 +142,7 @@ def generar_catalogo(category_text, header_color):
             y -= row_step
 
         if products_on_page >= page_limit:
+            draw_footer(c)
             c.showPage()
             header_height = draw_header_pageN(c, category_text, header_color, logo_path)
             y = PAGE_HEIGHT - header_height - PAGE2_START_Y_OFFSET

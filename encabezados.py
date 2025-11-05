@@ -65,7 +65,7 @@ def draw_logo_block(c, x, y, h, logo_path):
     El bloque es rectangular con un borde derecho puntiagudo.
     """
     block_h = h
-    block_w = h * 1.3
+    block_w = h * 1.2
 
     # Coordenadas de la forma (rectángulo con punta)
     pts = [
@@ -116,60 +116,67 @@ def draw_header_page1(c, category_text, header_color, logo_path):
     Dibuja el encabezado de la primera página:
     - Fondo recto perfectamente alineado.
     - Solo la esquina INFERIOR DERECHA queda redondeada.
-    - Bloque negro con logo pegado en la esquina superior izquierda,
-      y franja negra con el texto "Nuestra línea de productos disponibles".
+    - Bloque negro con logo pegado en la esquina superior izquierda.
+    - Franja negra inferior con borde derecho puntiagudo.
     """
     header_h = FIRST_HEADER_HEIGHT
-    fondo_w = 17.6 * cm  # ancho fijo (tal como pediste)
+    fondo_w = 17.6 * cm
     fondo_h = header_h + 1 * cm
     fondo_x = 1.3 * cm
     fondo_y = PAGE_HEIGHT - fondo_h + 1 * cm
 
-    # radio en puntos para la esquina redondeada (ajustable)
-    radius = 20  # puedes aumentar o disminuir (puntos)
+    # Radio del redondeo
+    radius = 25
 
-    # 1) Dibujamos un rounded rect completo (todos los bordes redondeados)
+    # Fondo principal
     c.setFillColor(header_color)
     c.roundRect(fondo_x, fondo_y, fondo_w, fondo_h, radius, fill=1, stroke=0)
 
-    # 2) "Cuadramos" las tres esquinas que NO deben quedar redondeadas
-    #    (superior-izquierda, superior-derecha, inferior-izquierda)
-    #    Dibujamos rectángulos del mismo color encima del roundRect para revertir
-    #    el redondeado en esas esquinas. Esto asegura que el bloque quede recto
-    #    excepto en la esquina inferior derecha.
-    # esquina superior-izq
+    # Recuadrar esquinas que no deben redondearse
     c.rect(fondo_x, PAGE_HEIGHT - radius, radius, radius, fill=1, stroke=0)
-    # esquina superior-der
     c.rect(fondo_x + fondo_w - radius, PAGE_HEIGHT - radius, radius, radius, fill=1, stroke=0)
-    # esquina inferior-izq
     c.rect(fondo_x, fondo_y, radius, radius, fill=1, stroke=0)
 
-    # (Opcional) si tu página es más ancha que fondo_w y quieres que el bloque
-    # esté alineado a la izquierda, dejamos fondo_w como ancho fijo.
-    # Si prefieres que el bloque se extienda hasta el borde derecho de la página,
-    # cambia fondo_w por PAGE_WIDTH.
+    # Bloque negro con logo
+    draw_logo_block(c, 0 * cm, fondo_y + 3 * cm, fondo_h * 0.60 , logo_path)
 
-    # 3) Bloque negro con el logo, pegado a la esquina superior izquierda
-    #    (tal y como habíamos definido en draw_logo_block)
-    draw_logo_block(c, 0 * cm, fondo_y + 3.7 * cm, (fondo_h / 2), logo_path)
-
-    # 4) Títulos (CATÁLOGO + categoría grande)
+    # Títulos
     c.setFillColor(colors.white)
-    c.setFont(get_font_name('bold'), 30)
-    c.drawCentredString(fondo_x + fondo_w / 2, PAGE_HEIGHT - fondo_h / 2 + 1.8 * cm, "CATÁLOGO")
+    c.setFont(get_font_name('bold'), 40)
+    c.drawCentredString(fondo_x + (fondo_w / 2) + 0.5 * cm, PAGE_HEIGHT - fondo_h / 2 + 1.8 * cm, "CATÁLOGO")
     c.setFont(get_font_name('bold'), 64)
-    c.drawCentredString(fondo_x + fondo_w / 2, PAGE_HEIGHT - fondo_h / 2 - 0.6 * cm, category_text.upper())
+    c.drawCentredString(fondo_x + (fondo_w / 2) + 0.25 * cm, PAGE_HEIGHT - fondo_h / 2 - 0.9 * cm, category_text.upper())
 
-    # 5) Franja negra pegada al borde inferior izquierdo del encabezado
-    franja_w = 9 * cm
+    # -------------------------------
+    # Franja negra inferior con punta
+    # -------------------------------
+    franja_w = 11.5 * cm
     franja_h = 0.9 * cm
     franja_x = fondo_x
     franja_y = fondo_y
+
+    # Definir puntos de la franja con punta derecha sutil
+    punta_longitud = 0.25 * cm  # longitud de la punta (ajústala a gusto)
+    pts = [
+        (franja_x, franja_y),  # esquina inferior izquierda
+        (franja_x + franja_w, franja_y),  # esquina inferior derecha
+        (franja_x + franja_w + punta_longitud, franja_y + franja_h / 2),  # punta
+        (franja_x + franja_w, franja_y + franja_h),  # esquina superior derecha
+        (franja_x, franja_y + franja_h),  # esquina superior izquierda
+    ]
+
     c.setFillColor(colors.black)
-    c.rect(franja_x, franja_y, franja_w, franja_h, fill=1, stroke=0)
+    path = c.beginPath()
+    path.moveTo(pts[0][0], pts[0][1])
+    for px, py in pts[1:]:
+        path.lineTo(px, py)
+    path.close()
+    c.drawPath(path, fill=1, stroke=0)
+
+    # Texto dentro de la franja
     c.setFillColor(colors.white)
-    c.setFont(get_font_name('CanvaSans'), 13)
-    c.drawString(fondo_x + 0.2 * cm, franja_y + 0.28 * cm, "Nuestra línea de productos disponibles")
+    c.setFont(get_font_name('bold'), 13)
+    c.drawString(franja_x + 0.25 * cm, franja_y + 0.28 * cm, "Nuestra línea de productos disponibles")
 
     return fondo_h
 
