@@ -1,5 +1,5 @@
 # =====================================
-# main.py
+# main.py - Adaptado para GitHub Codespaces
 # =====================================
 import pandas as pd
 from reportlab.lib.pagesizes import A4
@@ -7,7 +7,6 @@ from reportlab.pdfgen import canvas
 from reportlab.lib.units import cm
 from reportlab.lib import colors
 from reportlab.lib.utils import ImageReader
-from tkinter import Tk, Label, Entry, Button, colorchooser, messagebox
 import os
 import re
 from footer import draw_footer
@@ -23,9 +22,12 @@ from encabezados import (
 # CONFIG
 # -------------------------------
 EXCEL_FILE = "productos.xlsx"
-OUTPUT_FILE = "catalogo.pdf"
+OUTPUT_FILE = "catalogo2.pdf"
 PAGE_WIDTH, PAGE_HEIGHT = A4
 PAGE2_START_Y_OFFSET = 6.4 * cm
+
+# Detectar si estamos en Codespaces
+IN_CODESPACES = 'CODESPACES' in os.environ or not os.environ.get('DISPLAY')
 
 
 # -------------------------------
@@ -104,6 +106,7 @@ def draw_product_card(c, x, y, producto, triangle_color):
 
     draw_triangle(c, x + card_width, y, 1.4 * cm, triangle_color)
 
+
 # -------------------------------
 # GENERACIÓN DEL CATÁLOGO
 # -------------------------------
@@ -153,9 +156,77 @@ def generar_catalogo(category_text, header_color):
 
 
 # -------------------------------
-# INTERFAZ DE USUARIO
+# INTERFAZ DE USUARIO PARA MODO CONSOLA
 # -------------------------------
-def ui_main():
+def modo_consola():
+    """Interfaz de consola para Codespaces"""
+    print("=" * 60)
+    print("GENERADOR DE CATÁLOGO - MODO CONSOLA")
+    print("=" * 60)
+    
+    # Valores por defecto
+    titulo = "BOLSAS"
+    color_hex = "#63B7FF"
+    
+    while True:
+        print(f"\nConfiguración actual:")
+        print(f"1. Título: {titulo}")
+        print(f"2. Color HEX: {color_hex}")
+        print("3. Generar catálogo")
+        print("4. Salir")
+        
+        opcion = input("\nSelecciona una opción (1-4): ").strip()
+        
+        if opcion == "1":
+            nuevo_titulo = input("Nuevo título (ENTER para mantener actual): ").strip()
+            if nuevo_titulo:
+                titulo = nuevo_titulo
+            print(f"✅ Título actualizado: {titulo}")
+            
+        elif opcion == "2":
+            nuevo_color = input("Nuevo color HEX (ej: #3AA8FF): ").strip()
+            if nuevo_color:
+                if not re.match(r"^#?[0-9A-Fa-f]{6}$", nuevo_color):
+                    print("❌ Error: Formato HEX inválido. Usa formato como #3AA8FF")
+                    continue
+                if not nuevo_color.startswith("#"):
+                    nuevo_color = "#" + nuevo_color
+                color_hex = nuevo_color
+            print(f"✅ Color actualizado: {color_hex}")
+            
+        elif opcion == "3":
+            try:
+                print(f"\n🚀 Generando catálogo...")
+                print(f"   - Título: {titulo}")
+                print(f"   - Color: {color_hex}")
+                
+                color_obj = colors.HexColor(color_hex)
+                generar_catalogo(titulo, color_obj)
+                
+                print(f"✅ ¡Catálogo generado exitosamente!")
+                print(f"📄 Archivo: {OUTPUT_FILE}")
+                break
+                
+            except FileNotFoundError:
+                print("❌ Error: No se encuentra el archivo productos.xlsx")
+            except Exception as e:
+                print(f"❌ Error al generar el catálogo: {e}")
+                
+        elif opcion == "4":
+            print("👋 ¡Hasta luego!")
+            break
+            
+        else:
+            print("❌ Opción no válida. Por favor selecciona 1-4.")
+
+
+# -------------------------------
+# INTERFAZ GRÁFICA ORIGINAL
+# -------------------------------
+def ui_grafica():
+    """Interfaz gráfica original (solo si no estamos en Codespaces)"""
+    from tkinter import Tk, Label, Entry, Button, colorchooser, messagebox
+    
     root = Tk()
     root.title("Generador de Catálogo")
     root.geometry("420x300")
@@ -209,5 +280,13 @@ def ui_main():
     root.mainloop()
 
 
+# -------------------------------
+# EJECUCIÓN PRINCIPAL
+# -------------------------------
 if __name__ == "__main__":
-    ui_main()
+    if IN_CODESPACES:
+        print("🔧 Modo Codespaces detectado - Ejecutando interfaz de consola")
+        modo_consola()
+    else:
+        print("🖥️  Modo local detectado - Ejecutando interfaz gráfica")
+        ui_grafica()
