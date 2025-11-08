@@ -42,11 +42,32 @@ def dibujar_texto_con_saltos(c, x, y, texto, ancho_max, fuente, tamaño_fuente, 
 # COMPONENTES GRÁFICOS
 # -------------------------------
 def draw_code_background(c, x, y, card_width, card_height):
-    """Franja negra superior donde va el código."""
+    """Franja negra superior con borde derecho puntiagudo."""
     c.setFillColor(colors.black)
-    code_width = 3.8 * cm
+    code_width = 3.6 * cm
     code_height = 0.8 * cm
-    c.rect(x, y + card_height - code_height, code_width, code_height, fill=True, stroke=False)
+    punta_longitud = 0.2 * cm  # tamaño de la punta (ajustable)
+
+    # Coordenadas base
+    base_y = y + card_height - code_height
+    base_x = x
+
+    # Puntos del polígono (rectángulo con punta a la derecha)
+    pts = [
+        (base_x, base_y),  # esquina inferior izquierda
+        (base_x + code_width, base_y),  # inferior derecha
+        (base_x + code_width + punta_longitud, base_y + code_height / 2),  # punta
+        (base_x + code_width, base_y + code_height),  # superior derecha
+        (base_x, base_y + code_height),  # superior izquierda
+    ]
+
+    path = c.beginPath()
+    path.moveTo(pts[0][0], pts[0][1])
+    for px, py in pts[1:]:
+        path.lineTo(px, py)
+    path.close()
+
+    c.drawPath(path, fill=1, stroke=0)
 
 
 def draw_triangle(c, x, y, size, color):
@@ -78,7 +99,7 @@ def draw_product_card(c, x, y, producto, triangle_color):
     # 3️⃣ Texto del código (encima)
     c.setFillColor(colors.white)
     c.setFont(get_font_name('bold'), 13)
-    c.drawCentredString(x + 1.9 * cm, y + card_height - 0.5 * cm, producto.get("codigo", ""))
+    c.drawCentredString(x + 1.4 * cm, y + card_height - 0.55 * cm, producto.get("codigo", ""))
 
     # 4️⃣ Imagen del producto
     try:
@@ -99,7 +120,7 @@ def draw_product_card(c, x, y, producto, triangle_color):
 
     # 5️⃣ Descripción
     descripcion_x = x + card_width / 2
-    descripcion_y = y + 1.4 * cm
+    descripcion_y = y + card_height - 1.1 * cm
     dibujar_texto_con_saltos(
         c,
         descripcion_x,
