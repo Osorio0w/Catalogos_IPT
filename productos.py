@@ -1,5 +1,5 @@
 # =====================================
-# productos.py - versión mejorada 1.6.2
+# productos.py - versión mejorada 1.6.3 (corrige texto invisible)
 # =====================================
 from reportlab.lib import colors
 from reportlab.lib.units import cm
@@ -45,7 +45,7 @@ def draw_code_background(c, x, y, card_width, card_height):
     c.setFillColor(colors.black)
     code_width = 3.6 * cm
     code_height = 0.8 * cm
-    punta_longitud = 0.2 * cm  # tamaño de la punta
+    punta_longitud = 0.2 * cm
 
     base_y = y + card_height - code_height
     base_x = x
@@ -98,7 +98,7 @@ def draw_product_card(c, x, y, producto, triangle_color):
     c.setFont(get_font_name('bold'), 13)
     c.drawCentredString(x + 1.4 * cm, y + card_height - 0.55 * cm, str(producto.get("codigo", "")))
 
-    # Imagen del producto
+    # --- Imagen primero ---
     imagen_path = producto.get("imagen", "")
     if imagen_path:
         if imagen_path.lower().startswith("images/"):
@@ -122,9 +122,10 @@ def draw_product_card(c, x, y, producto, triangle_color):
         c.setFont(get_font_name('regular'), 7)
         c.drawCentredString(x + card_width / 2, y + 2.8 * cm, "[Sin imagen]")
 
-    # Descripción
+    # --- Descripción después de la imagen ---
     descripcion_x = x + card_width / 2
     descripcion_y = y + card_height - 1.1 * cm
+    c.setFillColor(colors.black)
     dibujar_texto_con_saltos(
         c,
         descripcion_x,
@@ -136,24 +137,20 @@ def draw_product_card(c, x, y, producto, triangle_color):
         max_lineas=3
     )
 
-    # Tabla de detalles
+    # Tabla inferior
     tabla_y = y
     tabla_h = 0.6 * cm
     columnas = ["UND", "BULTO", "UND.VENTA"]
     valores = [
         str(producto.get("und", "")),
-        str(producto.get("bulto", "")),      # ✅ ahora coincide con el main.py
-        str(producto.get("und_venta", ""))   # ✅ sin cambios
+        str(producto.get("bulto", "")),
+        str(producto.get("und_venta", ""))
     ]
 
-
-
-    # ⚙️ Anchos personalizados — UND y BULTO más juntas, UND.VENTA más separada
     col_widths = [1.5 * cm, 1.5 * cm, 2.6 * cm]
     total_width = sum(col_widths)
     start_x = x + (card_width - total_width) / 2
 
-    # Fondo gris claro sin bordes
     c.setFillColor(colors.whitesmoke)
     c.rect(start_x, tabla_y, total_width, tabla_h, fill=1, stroke=0)
 
@@ -161,13 +158,11 @@ def draw_product_card(c, x, y, producto, triangle_color):
     c.setFont(font_name, 10)
     c.setFillColor(colors.black)
 
-    # Títulos
     offset = start_x
     for i, titulo in enumerate(columnas):
         c.drawCentredString((offset + col_widths[i] / 2) - 0.4 * cm, tabla_y + tabla_h + 0.05 * cm, titulo)
         offset += col_widths[i]
 
-    # Valores
     offset = start_x
     for i, valor in enumerate(valores):
         c.drawCentredString((offset + col_widths[i] / 2) - 0.4 * cm, tabla_y + 0.18 * cm, valor)

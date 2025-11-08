@@ -1,5 +1,5 @@
 # =====================================
-# main.py - versión modular 1.5.0
+# main.py - versión modular 1.6.0 (limpia)
 # =====================================
 import pandas as pd
 from reportlab.lib.pagesizes import A4
@@ -15,13 +15,12 @@ from encabezados import (
     draw_header_pageN,
     get_logo_path
 )
-from productos import draw_product_card  # 👈 nuevo import
+from productos import draw_product_card
 
 # -------------------------------
 # CONFIG
 # -------------------------------
 EXCEL_FILE = "productos.xlsx"
-df = pd.read_excel(EXCEL_FILE, dtype=str).fillna("")
 OUTPUT_FILE = "catalogo.pdf"
 PAGE_WIDTH, PAGE_HEIGHT = A4
 PAGE2_START_Y_OFFSET = 6.4 * cm
@@ -32,15 +31,11 @@ IN_CODESPACES = 'CODESPACES' in os.environ or not os.environ.get('DISPLAY')
 # GENERACIÓN DEL CATÁLOGO
 # -------------------------------
 def generar_catalogo(category_text, header_color):
-    # 🔧 Lee todas las columnas como texto y elimina NaN
+    # Leer todo como texto (para evitar NaN)
     df = pd.read_excel(EXCEL_FILE, dtype=str).fillna("")
-    print("Columnas detectadas en el Excel:")
-    print(list(df.columns))
-
 
     cargar_fuentes()
     logo_path = get_logo_path()
-    df = pd.read_excel(EXCEL_FILE)
     c = canvas.Canvas(OUTPUT_FILE, pagesize=A4)
     triangle_color = header_color
 
@@ -49,17 +44,15 @@ def generar_catalogo(category_text, header_color):
     # -----------------------------------------
     columnas = 3
     card_width = 6.0 * cm
-    espacio = 0.6 * cm  # margen horizontal entre tarjetas
+    espacio = 0.6 * cm
     ancho_total = (card_width * columnas) + (espacio * (columnas - 1))
-    x_inicio = (PAGE_WIDTH - ancho_total) / 2  # centra la grilla horizontalmente
-
-    # Calculamos las posiciones X de cada columna
+    x_inicio = (PAGE_WIDTH - ancho_total) / 2
     x_positions = [x_inicio + i * (card_width + espacio) for i in range(columnas)]
 
     # -----------------------------------------
     # Configuración vertical
     # -----------------------------------------
-    row_step = 6.5 * cm  # espacio vertical entre filas
+    row_step = 6.5 * cm
     first_page_limit = 9
     other_pages_limit = 12
 
@@ -71,22 +64,11 @@ def generar_catalogo(category_text, header_color):
     # 🧱 Dibujo de tarjetas
     # -----------------------------------------
     for _, row in df.iterrows():
-        print("➡️  Debug producto:")
-        print("codigo:", row.get("codigo", ""))
-        print("bulto:", row.get("und_bulto", ""))
-        print("-----------------------")
-
         imagen_nombre = str(row.get("imagen", "")).strip()
         imagen_path = os.path.join("imagenes", imagen_nombre) if imagen_nombre else ""
 
-                # Normaliza nombres de columnas para evitar errores por punto o mayúsculas
-        # Normalizar nombres de columnas (limpieza reforzada)
-        cols = {}
-        for k in df.columns:
-            limpio = str(k).strip().lower().replace(".", "_").replace(" ", "_")
-            cols[limpio] = k
-        print("🧩 Columnas normalizadas:", cols)
-
+        # Normaliza nombres de columnas
+        cols = {str(k).strip().lower().replace(".", "_").replace(" ", "_"): k for k in df.columns}
 
         producto = {
             "codigo": str(row.get(cols.get("codigo", ""), "")).strip(),
@@ -96,8 +78,6 @@ def generar_catalogo(category_text, header_color):
             "bulto": str(row.get(cols.get("und_bulto", cols.get("bulto", "")), "")).strip(),
             "und_venta": str(row.get(cols.get("und_venta", cols.get("undventa", "")), "")).strip()
         }
-
-
 
         draw_product_card(c, x_positions[col], y, producto, triangle_color)
         col += 1
@@ -114,10 +94,10 @@ def generar_catalogo(category_text, header_color):
             y = PAGE_HEIGHT - header_height - PAGE2_START_Y_OFFSET
             col, products_on_page, page_limit = 0, 0, other_pages_limit
 
-    # Footer final
     draw_footer(c, header_color)
     c.save()
     print(f"✅ Catálogo generado: {OUTPUT_FILE}")
+
 
 # -------------------------------
 # INTERFAZ CONSOLA Y TK
@@ -148,7 +128,6 @@ def modo_consola():
             color_hex = nuevo_color
         elif opcion == "3":
             generar_catalogo(titulo, colors.HexColor(color_hex))
-            print(f"✅ Catálogo generado: {OUTPUT_FILE}")
             break
         elif opcion == "4":
             print("👋 Adiós")
