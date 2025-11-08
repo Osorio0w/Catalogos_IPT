@@ -1,5 +1,5 @@
 # =====================================
-# productos.py
+# productos.py - versión mejorada 1.6.0
 # =====================================
 from reportlab.lib import colors
 from reportlab.lib.units import cm
@@ -46,19 +46,17 @@ def draw_code_background(c, x, y, card_width, card_height):
     c.setFillColor(colors.black)
     code_width = 3.6 * cm
     code_height = 0.8 * cm
-    punta_longitud = 0.2 * cm  # tamaño de la punta (ajustable)
+    punta_longitud = 0.2 * cm  # tamaño de la punta
 
-    # Coordenadas base
     base_y = y + card_height - code_height
     base_x = x
 
-    # Puntos del polígono (rectángulo con punta a la derecha)
     pts = [
-        (base_x, base_y),  # esquina inferior izquierda
-        (base_x + code_width, base_y),  # inferior derecha
-        (base_x + code_width + punta_longitud, base_y + code_height / 2),  # punta
-        (base_x + code_width, base_y + code_height),  # superior derecha
-        (base_x, base_y + code_height),  # superior izquierda
+        (base_x, base_y),
+        (base_x + code_width, base_y),
+        (base_x + code_width + punta_longitud, base_y + code_height / 2),
+        (base_x + code_width, base_y + code_height),
+        (base_x, base_y + code_height),
     ]
 
     path = c.beginPath()
@@ -96,7 +94,7 @@ def draw_product_card(c, x, y, producto, triangle_color):
     # 2️⃣ Franja negra del código
     draw_code_background(c, x, y, card_width, card_height)
 
-    # 3️⃣ Texto del código (encima)
+    # 3️⃣ Texto del código
     c.setFillColor(colors.white)
     c.setFont(get_font_name('bold'), 13)
     c.drawCentredString(x + 1.4 * cm, y + card_height - 0.55 * cm, producto.get("codigo", ""))
@@ -132,5 +130,37 @@ def draw_product_card(c, x, y, producto, triangle_color):
         max_lineas=3
     )
 
-    # 6️⃣ Triángulo decorativo
+    # 6️⃣ Tabla de detalles (sin bordes visibles)
+    tabla_y = y
+    tabla_h = 0.6 * cm
+    columnas = ["UND", "BULTO", "UND.VENTA"]
+    valores = [
+        producto.get("und", ""),
+        producto.get("bulto", ""),
+        producto.get("und_venta", "")
+    ]
+    col_width = card_width / 3
+
+    # Fondo (gris claro sin bordes)
+    c.setFillColor(colors.whitesmoke)
+    c.rect(x, tabla_y, card_width, tabla_h, fill=1, stroke=0)
+
+    # Texto: títulos y valores (fuente CanvaSans-Bold, tamaño 10)
+    font_name = get_font_name('bold')
+    c.setFont(font_name, 10)
+    c.setFillColor(colors.black)
+
+    # Títulos
+    for i, titulo in enumerate(columnas):
+        c.drawCentredString(x + (i * col_width) + col_width / 2,
+                            tabla_y + tabla_h + 0.25 * cm,
+                            titulo)
+
+    # Valores
+    for i, valor in enumerate(valores):
+        c.drawCentredString(x + (i * col_width) + col_width / 2,
+                            tabla_y + 0.18 * cm,
+                            valor)
+
+    # 7️⃣ Triángulo decorativo
     draw_triangle(c, x + card_width, y, 1.4 * cm, triangle_color)

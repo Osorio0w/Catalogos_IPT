@@ -68,10 +68,15 @@ def generar_catalogo(category_text, header_color):
         imagen_path = os.path.join("imagenes", imagen_nombre) if imagen_nombre else ""
 
         producto = {
-            "codigo": str(row.get("codigo", "")),
-            "descripcion": str(row.get("descripcion", "")),
-            "imagen": imagen_path
+            "codigo": str(row.get("codigo", "")).strip(),
+            "descripcion": str(row.get("descripcion", "")).strip(),
+            "imagen": imagen_path,
+            "und": str(row.get("und", "")).strip(),
+            "bulto": str(row.get("bulto", "")).strip(),
+            "und_venta": str(row.get("und.venta", "")).strip()
         }
+
+
 
         draw_product_card(c, x_positions[col], y, producto, triangle_color)
         col += 1
