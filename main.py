@@ -65,7 +65,12 @@ def generar_catalogo(category_text, header_color):
     # -----------------------------------------
     for _, row in df.iterrows():
         imagen_nombre = str(row.get("imagen", "")).strip()
-        imagen_path = os.path.join("imagenes", imagen_nombre) if imagen_nombre else ""
+        # 🔧 Corrige rutas que vienen con 'images/' o con espacios
+        imagen_nombre = str(row.get("imagen", "")).strip().replace("\\", "/")
+        if imagen_nombre.lower().startswith("images/"):
+            imagen_nombre = imagen_nombre.replace("images/", "imagenes/", 1)
+        imagen_path = imagen_nombre if os.path.exists(imagen_nombre) else os.path.join("imagenes", os.path.basename(imagen_nombre))
+
 
         # Normaliza nombres de columnas
         cols = {str(k).strip().lower().replace(".", "_").replace(" ", "_"): k for k in df.columns}
