@@ -33,8 +33,10 @@ def dibujar_texto_con_saltos(c, x, y, texto, ancho_max, fuente, tamaño_fuente, 
     lineas = dividir_texto_en_lineas(texto, ancho_max, fuente, tamaño_fuente, max_lineas)
     c.setFont(fuente, tamaño_fuente)
     espaciado = tamaño_fuente * 0.9
+    alineacion_x = x - (ancho_max / 2) + 0.1 * cm # posición inicial a la izquierda del bloque
     for i, linea in enumerate(lineas):
-        c.drawCentredString(x, y - i * espaciado, linea)
+        c.drawString(alineacion_x, y - i * espaciado, linea)
+
 
 
 # -------------------------------
@@ -124,14 +126,14 @@ def draw_product_card(c, x, y, producto, triangle_color):
 
     # --- Descripción después de la imagen ---
     descripcion_x = x + card_width / 2
-    descripcion_y = y + card_height - 1.1 * cm
+    descripcion_y = y + card_height - 1.13 * cm
     c.setFillColor(colors.black)
     dibujar_texto_con_saltos(
         c,
         descripcion_x,
         descripcion_y,
         str(producto.get("descripcion", "")),
-        card_width - 1.2 * cm,
+        card_width * 1,
         get_font_name('bold'),
         9,
         max_lineas=3
