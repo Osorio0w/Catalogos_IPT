@@ -1,5 +1,5 @@
 # =====================================
-# productos.py - versión mejorada 1.6.0
+# productos.py - versión mejorada 1.6.1
 # =====================================
 from reportlab.lib import colors
 from reportlab.lib.units import cm
@@ -130,7 +130,7 @@ def draw_product_card(c, x, y, producto, triangle_color):
         max_lineas=3
     )
 
-    # 6️⃣ Tabla de detalles (sin bordes visibles)
+        # 6️⃣ Tabla de detalles (sin bordes visibles)
     tabla_y = y
     tabla_h = 0.6 * cm
     columnas = ["UND", "BULTO", "UND.VENTA"]
@@ -139,28 +139,33 @@ def draw_product_card(c, x, y, producto, triangle_color):
         producto.get("bulto", ""),
         producto.get("und_venta", "")
     ]
-    col_width = card_width / 3
 
-    # Fondo (gris claro sin bordes)
+    # ⚙️ Ancho personalizado para cada columna
+    col_widths = [1.6 * cm, 1.6 * cm, 2.4 * cm]  # UND y BULTO más juntas
+    total_width = sum(col_widths)
+    start_x = x + (6.0 * cm - total_width) / 2  # centra la tabla dentro del cuadro
+
+    # Fondo
     c.setFillColor(colors.whitesmoke)
-    c.rect(x, tabla_y, card_width, tabla_h, fill=1, stroke=0)
+    c.rect(start_x, tabla_y, total_width, tabla_h, fill=1, stroke=0)
 
     # Texto: títulos y valores (fuente CanvaSans-Bold, tamaño 10)
     font_name = get_font_name('bold')
     c.setFont(font_name, 10)
     c.setFillColor(colors.black)
 
-    # Títulos
+    # Dibujar títulos
+    offset = start_x
     for i, titulo in enumerate(columnas):
-        c.drawCentredString(x + (i * col_width) + col_width / 2,
-                            tabla_y + tabla_h + 0.25 * cm,
-                            titulo)
+        c.drawCentredString((offset + col_widths[i] / 2) - 0.4 * cm, tabla_y + tabla_h + 0.05 * cm, titulo)
+        offset += col_widths[i]
 
-    # Valores
+    # Dibujar valores
+    offset = start_x
     for i, valor in enumerate(valores):
-        c.drawCentredString(x + (i * col_width) + col_width / 2,
-                            tabla_y + 0.18 * cm,
-                            valor)
+        c.drawCentredString((offset + col_widths[i] / 2) - 0.4 * cm, tabla_y + 0.18 * cm, valor)
+        offset += col_widths[i]
+
 
     # 7️⃣ Triángulo decorativo
     draw_triangle(c, x + card_width, y, 1.4 * cm, triangle_color)
