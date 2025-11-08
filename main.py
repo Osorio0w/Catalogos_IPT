@@ -21,6 +21,7 @@ from productos import draw_product_card  # 👈 nuevo import
 # CONFIG
 # -------------------------------
 EXCEL_FILE = "productos.xlsx"
+df = pd.read_excel(EXCEL_FILE, dtype=str).fillna("")
 OUTPUT_FILE = "catalogo.pdf"
 PAGE_WIDTH, PAGE_HEIGHT = A4
 PAGE2_START_Y_OFFSET = 6.4 * cm
@@ -31,6 +32,12 @@ IN_CODESPACES = 'CODESPACES' in os.environ or not os.environ.get('DISPLAY')
 # GENERACIÓN DEL CATÁLOGO
 # -------------------------------
 def generar_catalogo(category_text, header_color):
+    # 🔧 Lee todas las columnas como texto y elimina NaN
+    df = pd.read_excel(EXCEL_FILE, dtype=str).fillna("")
+    print("Columnas detectadas en el Excel:")
+    print(list(df.columns))
+
+
     cargar_fuentes()
     logo_path = get_logo_path()
     df = pd.read_excel(EXCEL_FILE)
@@ -64,16 +71,30 @@ def generar_catalogo(category_text, header_color):
     # 🧱 Dibujo de tarjetas
     # -----------------------------------------
     for _, row in df.iterrows():
+        print("➡️  Debug producto:")
+        print("codigo:", row.get("codigo", ""))
+        print("bulto:", row.get("und_bulto", ""))
+        print("-----------------------")
+
         imagen_nombre = str(row.get("imagen", "")).strip()
         imagen_path = os.path.join("imagenes", imagen_nombre) if imagen_nombre else ""
 
+                # Normaliza nombres de columnas para evitar errores por punto o mayúsculas
+        # Normalizar nombres de columnas (limpieza reforzada)
+        cols = {}
+        for k in df.columns:
+            limpio = str(k).strip().lower().replace(".", "_").replace(" ", "_")
+            cols[limpio] = k
+        print("🧩 Columnas normalizadas:", cols)
+
+
         producto = {
-            "codigo": str(row.get("codigo", "")).strip(),
-            "descripcion": str(row.get("descripcion", "")).strip(),
+            "codigo": str(row.get(cols.get("codigo", ""), "")).strip(),
+            "descripcion": str(row.get(cols.get("descripcion", ""), "")).strip(),
             "imagen": imagen_path,
-            "und": str(row.get("und", "")).strip(),
-            "bulto": str(row.get("bulto", "")).strip(),
-            "und_venta": str(row.get("und.venta", "")).strip()
+            "und": str(row.get(cols.get("und", ""), "")).strip(),
+            "bulto": str(row.get(cols.get("und_bulto", cols.get("bulto", "")), "")).strip(),
+            "und_venta": str(row.get(cols.get("und_venta", cols.get("undventa", "")), "")).strip()
         }
 
 

@@ -1,10 +1,9 @@
 # =====================================
-# productos.py - versión mejorada 1.6.1
+# productos.py - versión mejorada 1.6.2
 # =====================================
 from reportlab.lib import colors
 from reportlab.lib.units import cm
 from reportlab.lib.utils import ImageReader
-from reportlab.pdfbase import pdfmetrics
 from encabezados import get_font_name
 
 
@@ -87,85 +86,92 @@ def draw_product_card(c, x, y, producto, triangle_color):
     card_width = 6.0 * cm
     card_height = 6.0 * cm
 
-    # 1️⃣ Marco del producto
+    # Marco
     c.setStrokeColor(colors.black)
     c.rect(x, y, card_width, card_height)
 
-    # 2️⃣ Franja negra del código
+    # Franja negra superior
     draw_code_background(c, x, y, card_width, card_height)
 
-    # 3️⃣ Texto del código
+    # Código del producto
     c.setFillColor(colors.white)
     c.setFont(get_font_name('bold'), 13)
-    c.drawCentredString(x + 1.4 * cm, y + card_height - 0.55 * cm, producto.get("codigo", ""))
+    c.drawCentredString(x + 1.4 * cm, y + card_height - 0.55 * cm, str(producto.get("codigo", "")))
 
-    # 4️⃣ Imagen del producto
-    try:
-        img = ImageReader(producto.get("imagen", ""))
-        c.drawImage(
-            img,
-            x + 0.5 * cm,
-            y + 1.7 * cm,
-            width=5.0 * cm,
-            height=2.6 * cm,
-            preserveAspectRatio=True,
-            mask='auto'
-        )
-    except Exception:
-        c.setFillColor(colors.black)
+    # Imagen del producto
+    imagen_path = producto.get("imagen", "")
+    if imagen_path:
+        if imagen_path.lower().startswith("images/"):
+            imagen_path = imagen_path.replace("images/", "imagenes/")
+        try:
+            img = ImageReader(imagen_path)
+            c.drawImage(
+                img,
+                x + 0.5 * cm,
+                y + 1.7 * cm,
+                width=5.0 * cm,
+                height=2.6 * cm,
+                preserveAspectRatio=True,
+                mask='auto'
+            )
+        except Exception:
+            c.setFillColor(colors.black)
+            c.setFont(get_font_name('regular'), 7)
+            c.drawCentredString(x + card_width / 2, y + 2.8 * cm, "[Imagen no encontrada]")
+    else:
         c.setFont(get_font_name('regular'), 7)
-        c.drawCentredString(x + card_width / 2, y + 2.8 * cm, "[Imagen no encontrada]")
+        c.drawCentredString(x + card_width / 2, y + 2.8 * cm, "[Sin imagen]")
 
-    # 5️⃣ Descripción
+    # Descripción
     descripcion_x = x + card_width / 2
     descripcion_y = y + card_height - 1.1 * cm
     dibujar_texto_con_saltos(
         c,
         descripcion_x,
         descripcion_y,
-        producto.get("descripcion", ""),
+        str(producto.get("descripcion", "")),
         card_width - 1.2 * cm,
         get_font_name('bold'),
         9,
         max_lineas=3
     )
 
-        # 6️⃣ Tabla de detalles (sin bordes visibles)
+    # Tabla de detalles
     tabla_y = y
     tabla_h = 0.6 * cm
     columnas = ["UND", "BULTO", "UND.VENTA"]
     valores = [
-        producto.get("und", ""),
-        producto.get("bulto", ""),
-        producto.get("und_venta", "")
+        str(producto.get("und", "")),
+        str(producto.get("bulto", "")),      # ✅ ahora coincide con el main.py
+        str(producto.get("und_venta", ""))   # ✅ sin cambios
     ]
 
-    # ⚙️ Ancho personalizado para cada columna
-    col_widths = [1.6 * cm, 1.6 * cm, 2.4 * cm]  # UND y BULTO más juntas
-    total_width = sum(col_widths)
-    start_x = x + (6.0 * cm - total_width) / 2  # centra la tabla dentro del cuadro
 
-    # Fondo
+
+    # ⚙️ Anchos personalizados — UND y BULTO más juntas, UND.VENTA más separada
+    col_widths = [1.5 * cm, 1.5 * cm, 2.6 * cm]
+    total_width = sum(col_widths)
+    start_x = x + (card_width - total_width) / 2
+
+    # Fondo gris claro sin bordes
     c.setFillColor(colors.whitesmoke)
     c.rect(start_x, tabla_y, total_width, tabla_h, fill=1, stroke=0)
 
-    # Texto: títulos y valores (fuente CanvaSans-Bold, tamaño 10)
     font_name = get_font_name('bold')
     c.setFont(font_name, 10)
     c.setFillColor(colors.black)
 
-    # Dibujar títulos
+    # Títulos
     offset = start_x
     for i, titulo in enumerate(columnas):
         c.drawCentredString((offset + col_widths[i] / 2) - 0.4 * cm, tabla_y + tabla_h + 0.05 * cm, titulo)
         offset += col_widths[i]
 
-    # Dibujar valores
+    # Valores
     offset = start_x
     for i, valor in enumerate(valores):
         c.drawCentredString((offset + col_widths[i] / 2) - 0.4 * cm, tabla_y + 0.18 * cm, valor)
         offset += col_widths[i]
 
-
-    # 7️⃣ Triángulo decorativo
+    # Triángulo decorativo
     draw_triangle(c, x + card_width, y, 1.4 * cm, triangle_color)
