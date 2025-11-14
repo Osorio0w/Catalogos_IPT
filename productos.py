@@ -1,10 +1,12 @@
 # =====================================
-# productos.py - versión mejorada 1.6.3 (corrige texto invisible)
+# productos.py - versión mejorada 1.6.4
+# Integración con imagenes.py (reescalado automático)
 # =====================================
 from reportlab.lib import colors
 from reportlab.lib.units import cm
 from reportlab.lib.utils import ImageReader
 from encabezados import get_font_name
+from imagenes import preparar_imagen  # 👈 nuevo import
 
 
 # -------------------------------
@@ -33,10 +35,9 @@ def dibujar_texto_con_saltos(c, x, y, texto, ancho_max, fuente, tamaño_fuente, 
     lineas = dividir_texto_en_lineas(texto, ancho_max, fuente, tamaño_fuente, max_lineas)
     c.setFont(fuente, tamaño_fuente)
     espaciado = tamaño_fuente * 0.9
-    alineacion_x = x - (ancho_max / 2) + 0.1 * cm # posición inicial a la izquierda del bloque
+    alineacion_x = x - (ancho_max / 2) + 0.1 * cm  # posición inicial a la izquierda del bloque
     for i, linea in enumerate(lineas):
         c.drawString(alineacion_x, y - i * espaciado, linea)
-
 
 
 # -------------------------------
@@ -100,20 +101,20 @@ def draw_product_card(c, x, y, producto, triangle_color):
     c.setFont(get_font_name('bold'), 13)
     c.drawCentredString(x + 1.4 * cm, y + card_height - 0.55 * cm, str(producto.get("codigo", "")))
 
-    # --- Imagen primero ---
+    # --- Imagen del producto ---
     imagen_path = producto.get("imagen", "")
     if imagen_path:
         if imagen_path.lower().startswith("images/"):
             imagen_path = imagen_path.replace("images/", "imagenes/")
         try:
-            img = ImageReader(imagen_path)
+            # ✅ Usa el nuevo sistema de reescalado
+            img = preparar_imagen(imagen_path, 5.0, 2.6)
             c.drawImage(
                 img,
                 x + 0.5 * cm,
                 y + 1.7 * cm,
                 width=5.0 * cm,
                 height=2.6 * cm,
-                preserveAspectRatio=True,
                 mask='auto'
             )
         except Exception:
@@ -124,7 +125,7 @@ def draw_product_card(c, x, y, producto, triangle_color):
         c.setFont(get_font_name('regular'), 7)
         c.drawCentredString(x + card_width / 2, y + 2.8 * cm, "[Sin imagen]")
 
-    # --- Descripción después de la imagen ---
+    # --- Descripción del producto ---
     descripcion_x = x + card_width / 2
     descripcion_y = y + card_height - 1.13 * cm
     c.setFillColor(colors.black)
@@ -139,10 +140,10 @@ def draw_product_card(c, x, y, producto, triangle_color):
         max_lineas=3
     )
 
-    # Tabla inferior
+    # --- Tabla de detalles ---
     tabla_y = y
     tabla_h = 0.6 * cm
-    columnas = ["UND", "BULTO", "UND.VENTA"]
+    columnas = ["UND:", "BULTO:", "UND.VENTA:"]
     valores = [
         str(producto.get("und", "")),
         str(producto.get("bulto", "")),
