@@ -80,6 +80,17 @@ def draw_triangle(c, x, y, size, color):
     path.close()
     c.drawPath(path, fill=1, stroke=0)
 
+def formatear_numero(valor):
+    """
+    Convierte el valor a número y devuelve una cadena con 2 decimales y '$' al final.
+    Si el valor no es numérico, lo devuelve tal cual.
+    """
+    try:
+        numero = float(valor)
+        return f"{numero:.2f}$"
+    except:
+        return str(valor)
+
 
 # -------------------------------
 # TARJETA DE PRODUCTO
@@ -116,7 +127,7 @@ def draw_product_card(c, x, y, producto, triangle_color):
 
             # Caja máxima disponible para la imagen (en puntos)
             max_w_pt = 5.0 * cm
-            max_h_pt = 2.6 * cm
+            max_h_pt = 3.8 * cm
 
             # Relación ancho/alto de la imagen
             img_ratio = img_w_px / float(img_h_px) if img_h_px != 0 else 1.0
@@ -136,7 +147,7 @@ def draw_product_card(c, x, y, producto, triangle_color):
             box_x = x + 0.5 * cm
             box_y = y + 1.7 * cm
             x_img = box_x + (max_w_pt - draw_w) / 2
-            y_img = box_y + (max_h_pt - draw_h) / 2
+            y_img = (box_y + (max_h_pt - draw_h) / 2) - 0.8 * cm
 
             # Dibujar la imagen con las dimensiones calculadas
             c.drawImage(
@@ -184,10 +195,11 @@ def draw_product_card(c, x, y, producto, triangle_color):
     tabla_h = 0.6 * cm
     columnas = ["UND:", "BULTO:", "UND.VENTA:"]
     valores = [
-        str(producto.get("und", "")),
-        str(producto.get("bulto", "")),
-        str(producto.get("und_venta", ""))
+        formatear_numero(producto.get("und", "")),
+        formatear_numero(producto.get("bulto", "")),
+        (producto.get("und_venta", ""))
     ]
+
 
     col_widths = [1.5 * cm, 1.5 * cm, 2.6 * cm]
     total_width = sum(col_widths)

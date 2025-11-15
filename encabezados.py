@@ -143,9 +143,9 @@ def draw_header_page1(c, category_text, header_color, logo_path):
     # Títulos
     c.setFillColor(colors.white)
     c.setFont(get_font_name('bold'), 40)
-    c.drawCentredString(fondo_x + (fondo_w / 2) + 0.5 * cm, PAGE_HEIGHT - fondo_h / 2 + 1.8 * cm, "CATÁLOGO")
-    c.setFont(get_font_name('bold'), 64)
-    c.drawCentredString(fondo_x + (fondo_w / 2) + 0.25 * cm, PAGE_HEIGHT - fondo_h / 2 - 0.9 * cm, category_text.upper())
+    c.drawCentredString(fondo_x + (fondo_w / 2) + 1 * cm, PAGE_HEIGHT - fondo_h / 2 + 1.8 * cm, "CATÁLOGO")
+    c.setFont(get_font_name('bold'), 58)
+    c.drawCentredString(fondo_x + (fondo_w / 2) + 1 * cm, PAGE_HEIGHT - fondo_h / 2 - 0.9 * cm, category_text.upper())
 
     # -------------------------------
     # Franja negra inferior con punta

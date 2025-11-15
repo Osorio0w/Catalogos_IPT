@@ -1,5 +1,5 @@
 # =====================================
-# main.py - versión modular 1.6.0 (limpia)
+# main.py - versión modular corregida 1.7.0
 # =====================================
 import pandas as pd
 from reportlab.lib.pagesizes import A4
@@ -30,10 +30,53 @@ IN_CODESPACES = 'CODESPACES' in os.environ or not os.environ.get('DISPLAY')
 # -------------------------------
 # GENERACIÓN DEL CATÁLOGO
 # -------------------------------
-def generar_catalogo(category_text, header_color):
-    # Leer todo como texto (para evitar NaN)
-    df = pd.read_excel(EXCEL_FILE, dtype=str).fillna("")
 
+def extraer_numero(valor):
+    if pd.isna(valor):
+        return 0
+    texto = str(valor).strip()
+    match = re.search(r"\d+(\.\d+)?", texto)
+    if match:
+        try:
+            return float(match.group())
+        except:
+            return 0
+    return 0
+
+
+def generar_catalogo(category_text, header_color):
+
+    # -------------------------------
+    # LECTURA FLEXIBLE DEL EXCEL
+    # -------------------------------
+    df = pd.read_excel(EXCEL_FILE)
+
+    # Normaliza nombres de columnas:
+    # - sin espacios
+    # - sin puntos
+    # - minúsculas
+    df.columns = (
+        df.columns
+        .str.strip()
+        .str.lower()
+        .str.replace(" ", "_")
+        .str.replace(".", "_")
+    )
+
+    # Columnas que el programa realmente necesita
+    COLUMNAS_NECESARIAS = ["codigo_catalogo", "descripcion", "imagen", "und", "bulto", "und_venta"]
+
+    # Validación: si falta alguna columna, avisar de forma clara
+    for col in COLUMNAS_NECESARIAS:
+        if col not in df.columns:
+            raise ValueError(f"❌ Falta la columna requerida en el Excel: '{col}'")
+
+    # Quédate solo con las columnas necesarias
+    df = df[COLUMNAS_NECESARIAS].fillna("")
+
+    # -------------------------------
+    # INICIALIZACIÓN DEL PDF
+    # -------------------------------
     cargar_fuentes()
     logo_path = get_logo_path()
     c = canvas.Canvas(OUTPUT_FILE, pagesize=A4)
@@ -64,27 +107,34 @@ def generar_catalogo(category_text, header_color):
     # 🧱 Dibujo de tarjetas
     # -----------------------------------------
     for _, row in df.iterrows():
-        imagen_nombre = str(row.get("imagen", "")).strip()
-        # 🔧 Corrige rutas que vienen con 'images/' o con espacios
-        imagen_nombre = str(row.get("imagen", "")).strip().replace("\\", "/")
+
+        # Procesar la ruta de imagen de forma segura
+        imagen_nombre = str(row["imagen"]).strip().replace("\\", "/")
+
         if imagen_nombre.lower().startswith("images/"):
             imagen_nombre = imagen_nombre.replace("images/", "imagenes/", 1)
-        imagen_path = imagen_nombre if os.path.exists(imagen_nombre) else os.path.join("imagenes", os.path.basename(imagen_nombre))
 
+        # Si no existe, intenta dentro de /imagenes
+        imagen_path = (
+            imagen_nombre
+            if os.path.exists(imagen_nombre)
+            else os.path.join("imagenes", os.path.basename(imagen_nombre))
+        )
 
-        # Normaliza nombres de columnas
-        cols = {str(k).strip().lower().replace(".", "_").replace(" ", "_"): k for k in df.columns}
-
+        # Armar el diccionario esperado por productos.py
         producto = {
-            "codigo": str(row.get(cols.get("codigo", ""), "")).strip(),
-            "descripcion": str(row.get(cols.get("descripcion", ""), "")).strip(),
+            "codigo": str(row["codigo_catalogo"]).strip(),
+            "descripcion": str(row["descripcion"]).strip(),
             "imagen": imagen_path,
-            "und": str(row.get(cols.get("und", ""), "")).strip(),
-            "bulto": str(row.get(cols.get("und_bulto", cols.get("bulto", "")), "")).strip(),
-            "und_venta": str(row.get(cols.get("und_venta", cols.get("undventa", "")), "")).strip()
+            "und": str(row["und"]).strip(),
+            "bulto": str(row["bulto"]).strip(),
+            "und_venta": str(row["und_venta"]).strip(),            # Se mostrará TAL CUAL en el PDF
+            "und_venta_num": extraer_numero(row["und_venta"]),    # Valor numérico opcional
+
         }
 
         draw_product_card(c, x_positions[col], y, producto, triangle_color)
+
         col += 1
         products_on_page += 1
 
