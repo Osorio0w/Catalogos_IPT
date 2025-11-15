@@ -84,8 +84,11 @@ def draw_triangle(c, x, y, size, color):
 # -------------------------------
 # TARJETA DE PRODUCTO
 # -------------------------------
+# -------------------------------
+# TARJETA DE PRODUCTO (versión mejorada de manejo de imagen)
+# -------------------------------
 def draw_product_card(c, x, y, producto, triangle_color):
-    """Dibuja una tarjeta individual de producto."""
+    """Dibuja una tarjeta individual de producto (mejor manejo de imágenes)."""
     card_width = 6.0 * cm
     card_height = 6.0 * cm
 
@@ -106,21 +109,57 @@ def draw_product_card(c, x, y, producto, triangle_color):
     if imagen_path:
         if imagen_path.lower().startswith("images/"):
             imagen_path = imagen_path.replace("images/", "imagenes/")
+
         try:
-            # ✅ Usa el nuevo sistema de reescalado
-            img = preparar_imagen(imagen_path, 5.0, 2.6)
+            # Preparamos la imagen (ImageReader + dimensiones en píxeles)
+            img_reader, img_w_px, img_h_px = preparar_imagen(imagen_path)
+
+            # Caja máxima disponible para la imagen (en puntos)
+            max_w_pt = 5.0 * cm
+            max_h_pt = 2.6 * cm
+
+            # Relación ancho/alto de la imagen
+            img_ratio = img_w_px / float(img_h_px) if img_h_px != 0 else 1.0
+            box_ratio = max_w_pt / float(max_h_pt)
+
+            # Calcular tamaño de dibujo manteniendo proporción (fit within box)
+            if img_ratio > box_ratio:
+                # La imagen es relativamente más ancha -> limitamos por ancho
+                draw_w = max_w_pt
+                draw_h = max_w_pt / img_ratio
+            else:
+                # La imagen es relativamente más alta -> limitamos por alto
+                draw_h = max_h_pt
+                draw_w = max_h_pt * img_ratio
+
+            # Centrar la imagen dentro de la caja de 5.0 x 2.6 cm
+            box_x = x + 0.5 * cm
+            box_y = y + 1.7 * cm
+            x_img = box_x + (max_w_pt - draw_w) / 2
+            y_img = box_y + (max_h_pt - draw_h) / 2
+
+            # Dibujar la imagen con las dimensiones calculadas
             c.drawImage(
-                img,
-                x + 0.5 * cm,
-                y + 1.7 * cm,
-                width=5.0 * cm,
-                height=2.6 * cm,
+                img_reader,
+                x_img,
+                y_img,
+                width=draw_w,
+                height=draw_h,
+                preserveAspectRatio=True,
                 mask='auto'
             )
-        except Exception:
+
+        except FileNotFoundError:
             c.setFillColor(colors.black)
             c.setFont(get_font_name('regular'), 7)
             c.drawCentredString(x + card_width / 2, y + 2.8 * cm, "[Imagen no encontrada]")
+        except Exception as e:
+            # Mensaje de fallback y log en consola
+            print(f"⚠️ Error al preparar/dibujar imagen '{imagen_path}': {e}")
+            c.setFillColor(colors.black)
+            c.setFont(get_font_name('regular'), 7)
+            c.drawCentredString(x + card_width / 2, y + 2.8 * cm, "[Error imagen]")
+
     else:
         c.setFont(get_font_name('regular'), 7)
         c.drawCentredString(x + card_width / 2, y + 2.8 * cm, "[Sin imagen]")
